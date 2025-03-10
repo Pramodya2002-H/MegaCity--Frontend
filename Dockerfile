@@ -1,24 +1,22 @@
-# Stage 1: Build the app
-FROM node:18-alpine AS build
+# Use an official Node.js runtime as the base image
+FROM node:18-alpine
+
+# Set working directory
 WORKDIR /app
 
-# Copy package.json and package-lock.json
-COPY package.json package-lock.json ./
+# Copy package.json and install dependencies
+COPY package*.json ./
+RUN npm ci
 
-# Install dependencies
-RUN npm install
-
-# Copy the rest of the application code
+# Copy the rest of the app
 COPY . .
 
 # Build the app
 RUN npm run build
 
-# Stage 2: Serve the app using Nginx
+# Use a lightweight web server to serve the app
 FROM nginx:alpine
-
-# Copy the built app from the build stage
-COPY --from=build /app/dist /usr/share/nginx/html
+COPY --from=0 /app/dist /usr/share/nginx/html
 
 # Expose port 80
 EXPOSE 80
