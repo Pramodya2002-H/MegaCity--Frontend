@@ -22,7 +22,10 @@ jobs:
         run: npm ci
 
       - name: Build React App (Vite)
-        run: npm run build && mv dist mega-city-cab-frontend
+        run: npm run build
+
+      - name: Verify Build Output
+        run: ls -R dist
 
       - name: Log into Docker Hub
         run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
@@ -30,7 +33,9 @@ jobs:
       - name: Docker Build
         run: |
           docker build -t "${{ secrets.DOCKER_USERNAME }}/mega-city-cab-frontend:latest" .
+          docker tag "${{ secrets.DOCKER_USERNAME }}/mega-city-cab-frontend:latest" "${{ secrets.DOCKER_USERNAME }}/mega-city-cab-frontend:${{ github.sha }}"
 
       - name: Publish Docker Image
         run: |
           docker push "${{ secrets.DOCKER_USERNAME }}/mega-city-cab-frontend:latest"
+          docker push "${{ secrets.DOCKER_USERNAME }}/mega-city-cab-frontend:${{ github.sha }}"
