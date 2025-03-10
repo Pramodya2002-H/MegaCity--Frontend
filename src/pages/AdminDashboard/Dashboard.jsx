@@ -9,11 +9,14 @@ import {
   FiFileText,
   FiLogOut,
 } from "react-icons/fi";
+import { PieChart, Pie, Cell, Tooltip, Legend, BarChart, Bar, XAxis, YAxis, CartesianGrid } from "recharts";
 
 const Dashboard = () => {
   const [active, setActive] = useState("dashboard");
   const [adminName, setAdminName] = useState("Loading...");
   const [customers, setCustomers] = useState([]);
+  const [drivers, setDrivers] = useState([]);
+  const [cars, setCars] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const navigate = useNavigate();
@@ -33,17 +36,62 @@ const Dashboard = () => {
         console.error("Error fetching admin details:", error);
         setError("Unable to load admin details. Please try again.");
         setAdminName("Unknown Admin");
-      } finally {
-        setLoading(false);
       }
     };
 
     fetchAdminDetails();
   }, []);
 
+  // Fetch customers, drivers, and cars when "Dashboard" is active
+  useEffect(() => {
+    if (active !== "dashboard") return;
+
+    const fetchData = async () => {
+      setLoading(true);
+      try {
+        // Fetch Customers
+        const customersResponse = await fetch("http://localhost:8080/auth/customers/viewCustomers", {
+          method: "GET",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+        });
+        if (!customersResponse.ok) throw new Error("Failed to fetch customers");
+        const customersData = await customersResponse.json();
+        setCustomers(customersData);
+
+        // Fetch Drivers
+        const driversResponse = await fetch("http://localhost:8080/auth/driver/getalldrivers", {
+          method: "GET",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+        });
+        if (!driversResponse.ok) throw new Error("Failed to fetch drivers");
+        const driversData = await driversResponse.json();
+        setDrivers(driversData);
+
+        // Fetch Cars
+        const carsResponse = await fetch("http://localhost:8080/auth/cars/car", {
+          method: "GET",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+        });
+        if (!carsResponse.ok) throw new Error("Failed to fetch cars");
+        const carsData = await carsResponse.json();
+        setCars(carsData);
+      } catch (error) {
+        console.error("Error fetching data:", error);
+        setError("Unable to load dashboard data. Please try again.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [active]);
+
   // Fetch all customers when "Users" is clicked
   useEffect(() => {
-    if (active !== "users") return; // Only fetch customers when "Users" is active
+    if (active !== "users") return;
 
     const fetchCustomers = async () => {
       setLoading(true);
@@ -76,12 +124,28 @@ const Dashboard = () => {
     navigate("/login");
   };
 
+  // Prepare data for Pie Chart
+  const pieChartData = [
+    { name: "Customers", value: customers.length },
+    { name: "Drivers", value: drivers.length },
+    { name: "Cars", value: cars.length },
+  ];
+
+  // Prepare data for Bar Chart
+  const barChartData = [
+    { name: "Customers", count: customers.length },
+    { name: "Drivers", count: drivers.length },
+    { name: "Cars", count: cars.length },
+  ];
+
+  const COLORS = ["#FF6384", "#36A2EB", "#FFCE56"];
+
   if (loading && active === "dashboard") {
     return (
       <div className="flex h-screen bg-gray-100 items-center justify-center">
         <div className="flex flex-col items-center">
           <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-green-400"></div>
-          <p className="mt-4 text-bg-linear-to-r from-gray-300 via-yellow-500 to-amber-400 font-medium">Loading admin details...</p>
+          <p className="mt-4 text-green-400 font-medium">Loading dashboard data...</p>
         </div>
       </div>
     );
@@ -194,11 +258,49 @@ const Dashboard = () => {
 
       {/* Main Content */}
       <main className="flex-1 bg-white p-8 flex justify-center items-start">
-        {/* Default Dashboard Content */}
+        {/* Dashboard Content with Charts */}
         {active === "dashboard" && (
           <div className="w-full max-w-4xl">
             <h2 className="text-3xl font-semibold">Dashboard</h2>
             <p className="text-gray-600 mt-2">Welcome, {adminName}!</p>
+
+            <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Pie Chart for Data Distribution */}
+              <div className="bg-white p-4 border border-gray-200 rounded-lg shadow">
+                <h3 className="text-xl font-semibold mb-4">Data Distribution</h3>
+                <PieChart width={300} height={300}>
+                  <Pie
+                    data={pieChartData}
+                    dataKey="value"
+                    nameKey="name"
+                    cx="50%"
+                    cy="50%"
+                    outerRadius={80}
+                    fill="#8884d8"
+                    label
+                  >
+                    {pieChartData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip />
+                  <Legend />
+                </PieChart>
+              </div>
+
+              {/* Bar Chart for Data Counts */}
+              <div className="bg-white p-4 border border-gray-200 rounded-lg shadow">
+                <h3 className="text-xl font-semibold mb-4">Data Counts</h3>
+                <BarChart width={300} height={300} data={barChartData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="name" />
+                  <YAxis />
+                  <Tooltip />
+                  <Legend />
+                  <Bar dataKey="count" fill="#36A2EB" />
+                </BarChart>
+              </div>
+            </div>
           </div>
         )}
 
