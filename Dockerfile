@@ -16,10 +16,6 @@ RUN npm run build
 
 # Use a lightweight web server to serve the app
 FROM nginx:alpine
-COPY --from=0 /app/dist /usr/share/nginx/html
-
-# Expose port 80
+COPY mega-city-cab-frontend /usr/share/nginx/html
 EXPOSE 80
-
-# Start Nginx
 CMD ["nginx", "-g", "daemon off;"]
