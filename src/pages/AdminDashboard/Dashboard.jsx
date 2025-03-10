@@ -49,7 +49,6 @@ const Dashboard = () => {
     const fetchData = async () => {
       setLoading(true);
       try {
-        // Fetch Customers
         const customersResponse = await fetch("http://localhost:8080/auth/customers/viewCustomers", {
           method: "GET",
           headers: { "Content-Type": "application/json" },
@@ -59,7 +58,6 @@ const Dashboard = () => {
         const customersData = await customersResponse.json();
         setCustomers(customersData);
 
-        // Fetch Drivers
         const driversResponse = await fetch("http://localhost:8080/auth/driver/getalldrivers", {
           method: "GET",
           headers: { "Content-Type": "application/json" },
@@ -69,7 +67,6 @@ const Dashboard = () => {
         const driversData = await driversResponse.json();
         setDrivers(driversData);
 
-        // Fetch Cars
         const carsResponse = await fetch("http://localhost:8080/auth/cars/car", {
           method: "GET",
           headers: { "Content-Type": "application/json" },
@@ -98,11 +95,7 @@ const Dashboard = () => {
       try {
         const response = await fetch("http://localhost:8080/auth/customers/viewCustomers", {
           method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            // Add Authorization header if required
-            // ...(token && { Authorization: `Bearer ${token}` }),
-          },
+          headers: { "Content-Type": "application/json" },
           credentials: "include",
         });
         if (!response.ok) throw new Error(`Failed to fetch customers: ${response.status}`);
@@ -119,19 +112,39 @@ const Dashboard = () => {
     fetchCustomers();
   }, [active]);
 
+  // Function to delete a customer
+  const handleDeleteCustomer = async (customerId) => {
+    if (!window.confirm("Are you sure you want to delete this customer?")) return;
+
+    try {
+      const response = await fetch(`http://localhost:8080/auth/customers/deleteCustomer/${customerId}`, {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+      });
+
+      if (!response.ok) throw new Error("Failed to delete customer");
+
+      // Update the customers state by filtering out the deleted customer
+      setCustomers(customers.filter((customer) => customer._id !== customerId));
+      alert("Customer deleted successfully!");
+    } catch (error) {
+      console.error("Error deleting customer:", error);
+      setError("Failed to delete customer. Please try again.");
+    }
+  };
+
   const handleLogout = () => {
     localStorage.removeItem("admin");
     navigate("/login");
   };
 
-  // Prepare data for Pie Chart
   const pieChartData = [
     { name: "Customers", value: customers.length },
     { name: "Drivers", value: drivers.length },
     { name: "Cars", value: cars.length },
   ];
 
-  // Prepare data for Bar Chart
   const barChartData = [
     { name: "Customers", count: customers.length },
     { name: "Drivers", count: drivers.length },
@@ -265,7 +278,6 @@ const Dashboard = () => {
             <p className="text-gray-600 mt-2">Welcome, {adminName}!</p>
 
             <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Pie Chart for Data Distribution */}
               <div className="bg-white p-4 border border-gray-200 rounded-lg shadow">
                 <h3 className="text-xl font-semibold mb-4">Data Distribution</h3>
                 <PieChart width={300} height={300}>
@@ -288,7 +300,6 @@ const Dashboard = () => {
                 </PieChart>
               </div>
 
-              {/* Bar Chart for Data Counts */}
               <div className="bg-white p-4 border border-gray-200 rounded-lg shadow">
                 <h3 className="text-xl font-semibold mb-4">Data Counts</h3>
                 <BarChart width={300} height={300} data={barChartData}>
@@ -304,11 +315,11 @@ const Dashboard = () => {
           </div>
         )}
 
-        {/* Users Content (Customer List) */}
+        {/* Users Content (Customer List with Delete) */}
         {active === "users" && (
           <div className="w-full max-w-4xl">
             <h2 className="text-3xl font-semibold">Users</h2>
-            <p className="text-gray-600 mt-2">View all customers in the system.</p>
+            <p className="text-gray-600 mt-2">View and manage all customers in the system.</p>
 
             <div className="mt-8">
               <h3 className="text-2xl font-semibold mb-4">All Customers</h3>
@@ -330,6 +341,7 @@ const Dashboard = () => {
                         <th className="py-2 px-4 border-b">Email</th>
                         <th className="py-2 px-4 border-b">Phone</th>
                         <th className="py-2 px-4 border-b">Address</th>
+                        <th className="py-2 px-4 border-b">Actions</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -339,6 +351,14 @@ const Dashboard = () => {
                           <td className="py-2 px-4 border-b">{customer.email || "N/A"}</td>
                           <td className="py-2 px-4 border-b">{customer.phone || "N/A"}</td>
                           <td className="py-2 px-4 border-b">{customer.address || "N/A"}</td>
+                          <td className="py-2 px-4 border-b">
+                            <button
+                              onClick={() => handleDeleteCustomer(customer._id || customer.customerId)}
+                              className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600"
+                            >
+                              Delete
+                            </button>
+                          </td>
                         </tr>
                       ))}
                     </tbody>
