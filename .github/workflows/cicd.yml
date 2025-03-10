@@ -38,4 +38,3 @@ jobs:
       - name: Publish Docker Image
         run: |
           docker push "${{ secrets.DOCKER_USERNAME }}/mega-city-cab-frontend:latest"
-          docker push "${{ secrets.DOCKER_USERNAME }}/mega-city-cab-frontend:${{ github.sha }}"
