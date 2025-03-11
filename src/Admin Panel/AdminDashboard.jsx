@@ -51,23 +51,23 @@ const AdminDashboard = ({ adminName }) => {
     { name: "Cars", count: cars.length },
   ];
 
-  // Colors for the pie chart
-  const COLORS = ["#FF6384", "#36A2EB", "#FFCE56"];
+  // Colors for the pie chart (using yellow and black theme)
+  const COLORS = ["#FFD700", "#FFA500", "#FF8C00"]; // Shades of yellow/orange
 
   // Show loading state while fetching data
   if (loading) {
-    return <div>Loading dashboard data...</div>;
+    return <div className="text-white">Loading dashboard data...</div>;
   }
 
   return (
-    <div>
-      <h2 className="text-3xl font-semibold">Dashboard</h2>
-      <p className="text-gray-600 mt-2">Welcome, {adminName}!</p>
+    <div className="bg-black text-white p-6 min-h-screen">
+      <h2 className="text-3xl font-semibold text-yellow-500">Dashboard</h2>
+      <p className="text-gray-400 mt-2">Welcome, {adminName}!</p>
       <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Pie Chart Section */}
-        <div className="bg-white p-4 border border-gray-200 rounded-lg shadow">
-          <h3 className="text-xl font-semibold mb-4">Data Distribution</h3>
-          <PieChart width={300} height={300}>
+        <div className="bg-gray-900 p-4 border border-yellow-500 rounded-lg shadow-lg">
+          <h3 className="text-xl font-semibold mb-4 text-yellow-500">Data Distribution</h3>
+          <PieChart width={200} height={300}>
             <Pie
               data={pieChartData}
               dataKey="value"
@@ -82,21 +82,21 @@ const AdminDashboard = ({ adminName }) => {
                 <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
               ))}
             </Pie>
-            <Tooltip />
-            <Legend />
+            <Tooltip contentStyle={{ backgroundColor: "#1e1e1e", border: "1px solid #FFD700", color: "#FFD700" }} />
+            <Legend wrapperStyle={{ color: "#FFD700" }} />
           </PieChart>
         </div>
 
         {/* Bar Chart Section */}
-        <div className="bg-white p-4 border border-gray-200 rounded-lg shadow">
-          <h3 className="text-xl font-semibold mb-4">Data Counts</h3>
+        <div className="bg-gray-900 p-4 border border-yellow-500 rounded-lg shadow-lg">
+          <h3 className="text-xl font-semibold mb-4 text-yellow-500">Data Counts</h3>
           <BarChart width={300} height={300} data={barChartData}>
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="name" />
-            <YAxis />
-            <Tooltip />
-            <Legend />
-            <Bar dataKey="count" fill="#36A2EB" />
+            <CartesianGrid strokeDasharray="3 3" stroke="#FFD700" />
+            <XAxis dataKey="name" stroke="#FFD700" />
+            <YAxis stroke="#FFD700" />
+            <Tooltip contentStyle={{ backgroundColor: "#1e1e1e", border: "1px solid #FFD700", color: "#FFD700" }} />
+            <Legend wrapperStyle={{ color: "#FFD700" }} />
+            <Bar dataKey="count" fill="#FFD700" />
           </BarChart>
         </div>
       </div>
