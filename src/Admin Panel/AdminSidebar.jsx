@@ -9,10 +9,11 @@ import {
   LogOut,
   Bell,
 } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 const AdminSidebar = () => {
   const [activeItem, setActiveItem] = useState("dashboard");
+  const navigate = useNavigate();
 
   const menuItems = [
     {
@@ -35,26 +36,20 @@ const AdminSidebar = () => {
     },
     {
       id: "bookings",
-      icon: <Calendar size={20} />, // Use the Calendar icon for bookings
+      icon: <Calendar size={20} />,
       label: "Bookings",
-      path: "/admin/bookingContent", // Path to the BookingContent component
-    },
-    {
-      id: "analytics",
-      icon: <BarChart3 size={20} />,
-      label: "Analytics",
-      path: "/analytics",
-    },
-    {
-      id: "settings",
-      icon: <Settings size={20} />,
-      label: "Settings",
-      path: "/settings",
+      path: "/admin/bookingContent",
     },
   ];
 
   const handleItemClick = (id) => {
     setActiveItem(id);
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem("authToken");
+    localStorage.removeItem("userRole");
+    navigate("/login");
   };
 
   return (
@@ -104,14 +99,17 @@ const AdminSidebar = () => {
               3
             </span>
           </div>
-          <button className="text-gray-300 hover:text-yellow-500">
+          <button
+            onClick={handleLogout}
+            className="text-gray-300 hover:text-yellow-500"
+          >
             <LogOut size={20} />
           </button>
         </div>
         <div className="flex items-center">
           <img
-            src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"
-            alt="User profile"
+            src="https://images.unsplash.com/photo-1633332755192-727a05c4013d?ixlib=rb-4.0.3&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"
+            alt="Admin profile"
             className="h-10 w-10 rounded-full border-2 border-yellow-500"
           />
           <div className="ml-3">
