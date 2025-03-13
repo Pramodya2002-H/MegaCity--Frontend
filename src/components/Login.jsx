@@ -46,7 +46,7 @@ const Login = () => {
           navigate("/fleet");
           break;
         case "ROLE_DRIVER":
-          navigate("/driver-dashboard");
+          navigate("/driverDashboard");
           break;
         default:
           setError("Invalid user role");
@@ -82,7 +82,7 @@ const Login = () => {
   return (
     <div
       className="min-h-screen bg-cover bg-center flex items-center justify-center"
-      style={{ backgroundImage: "url('/src/assets/login.webp')" }}
+      style={{ backgroundImage: "url('/src/assets/taxi.jpg')" }}
     >
       <div className="max-w-md mx-auto p-10 bg-black/40 text-white shadow-2xl rounded-3xl backdrop-blur-md">
         <h2 className="text-3xl font-extrabold mb-6 text-center">Welcome Back!</h2>
