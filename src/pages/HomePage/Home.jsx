@@ -14,17 +14,26 @@ const Home = () => {
     const fetchCars = async () => {
       setLoading(true);
       try {
-        const response = await fetch("http://localhost:8080/auth/cars/car");
-        if (!response.ok) throw new Error("Failed to fetch cars");
+        const token = localStorage.getItem('jwtToken'); // Add authentication token
+        const response = await fetch("http://localhost:8080/auth/cars/car", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        if (!response.ok) throw new Error(`Failed to fetch cars: ${response.status}`);
         const data = await response.json();
 
-        const mappedCars = data.map((car) => ({
-          id: car.carId,
-          brand: car.carBrand,
-          model: car.carModel,
-          image: car.carImgUrl || "https://via.placeholder.com/300x200?text=No+Image",
-          pricePerDay: car.pricePerDay || Math.floor(Math.random() * 50) + 50,
-        }));
+        const mappedCars = data.map((car) => {
+          const carData = {
+            id: car.carId,
+            brand: car.carBrand,
+            model: car.carModel,
+            image: car.carImgUrl || "https://via.placeholder.com/300x200?text=No+Image",
+            pricePerDay: car.pricePerDay || Math.floor(Math.random() * 50) + 50,
+          };
+          console.log("Mapped car:", carData); // Debug log
+          return carData;
+        });
 
         setCars(mappedCars);
       } catch (error) {
@@ -117,8 +126,9 @@ const Home = () => {
                   >
                     <img
                       src={car.image}
-                      alt={`${car.brand} ${car.model}`} // Fixed syntax
+                      alt={`${car.brand} ${car.model}`}
                       className="w-full h-48 object-cover rounded-lg mb-4"
+                      onError={(e) => (e.target.src = "https://via.placeholder.com/300x200?text=No+Image")} // Fallback on error
                     />
                     <h3 className="text-xl font-semibold text-yellow-300">
                       {car.brand} {car.model}
