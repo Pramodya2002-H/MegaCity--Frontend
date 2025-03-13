@@ -3,8 +3,10 @@ import Header from "../../components/Header";
 import Footer from "../../components/Footer";
 import { Eye, EyeOff, User, Phone, Mail, Key, FileText, Car } from "lucide-react";
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom'; // Import useNavigate
 
 const Driver = () => {
+  const navigate = useNavigate(); // Initialize navigation hook
   const [step, setStep] = useState(1);
   const [hasCar, setHasCar] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -108,7 +110,9 @@ const Driver = () => {
         }
       );
 
-      setSuccess('Driver registered successfully!');
+      setSuccess('Driver registered successfully! Redirecting to login...');
+      
+      // Reset form data
       setFormData({
         driverName: '',
         email: '',
@@ -124,8 +128,12 @@ const Driver = () => {
         driverRate: 0,
         carImage: null,
       });
-      setStep(1);
-      setHasCar(false);
+      
+      // Navigate to login page after a short delay
+      setTimeout(() => {
+        navigate('/login'); // Redirect to login page
+      }, 2000); // 2 second delay to show success message
+      
     } catch (error) {
       console.error('Error creating driver:', error);
       setError('Error creating driver. Please try again.');
