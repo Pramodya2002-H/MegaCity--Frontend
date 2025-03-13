@@ -115,7 +115,7 @@ const AdminSidebar = () => {
             className="h-10 w-10 rounded-full border-2 border-yellow-500"
           />
           <div className="ml-3">
-            <p className="text-sm font-medium">John Doe</p>
+            <p className="text-sm font-medium">Oneth Vindima</p>
             <p className="text-xs text-gray-400">Administrator</p>
           </div>
         </div>
