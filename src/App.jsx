@@ -11,13 +11,11 @@ import DriverDashboard from "./pages/DriverDashboard/DriverDashboard.jsx";
 import Fleet from "./pages/Fleet Display/Fleet.jsx";
 import Driver from "./pages/Drivers/Driver.jsx";
 import ContactUs from "./pages/ContactUs/ContactUs.jsx";
-
-
-import AdminRoutes from "./Admin Panel/AdminRoutes.jsx";
-import AdminSidebar from "./Admin Panel/AdminSidebar.jsx";
 import AboutUs from "./pages/AboutUs/AboutUs.jsx";
 import UpdateDriverProfile from "./pages/DriverDashboard/UpdateDriverProfile.jsx";
 
+import AdminRoutes from "./Admin Panel/AdminRoutes.jsx";
+import AdminSidebar from "./Admin Panel/AdminSidebar.jsx";
 
 function App() {
   const [count, setCount] = useState(0)
@@ -46,9 +44,6 @@ function App() {
          
           </div>
           </>
-        
-     
-    
   );
 }
 
