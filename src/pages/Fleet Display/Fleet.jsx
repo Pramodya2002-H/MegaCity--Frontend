@@ -117,7 +117,7 @@ const Fleet = () => {
 
       {/* Header Section with Animated Gradient */}
       <div className="relative bg-gradient-to-r from-yellow-500 via-gray-800 to-black text-white py-24 px-6 overflow-hidden">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-yellow-500/20 via-transparent to-transparent animate-pulse"></div>
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops)s)] from-yellow-500/20 via-transparent to-transparent animate-pulse"></div>
         <div className="container mx-auto text-center relative z-10">
           <h1 className="text-5xl md:text-6xl font-extrabold mb-4 tracking-tight drop-shadow-lg">
             Discover Our Elite Fleet
