@@ -1,94 +1,151 @@
-import React, { useEffect, useState } from "react";
-import axios from "axios";
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 
-const BookingContent = () => {
+const API_BASE_URL = 'http://localhost:8080';
+
+const BookingDashboard = () => {
   const [bookings, setBookings] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     fetchBookings();
   }, []);
 
-  // Function to get the JWT token from local storage
-  const getToken = () => {
-    return localStorage.getItem("jwtToken"); // Assuming the token is stored with the key 'jwtToken'
-  };
-
-  // Fetch all bookings
   const fetchBookings = async () => {
+    setLoading(true);
     try {
-      const token = getToken();
-      const response = await axios.get("http://localhost:8080/auth/booking/getallBookings", {
-        headers: {
-          Authorization: `Bearer ${token}`, // Include the JWT token in the header
-        },
-      });
+      const response = await axios.get(`${API_BASE_URL}/auth/bookings/getallbookings`);
       setBookings(response.data);
-    } catch (error) {
-      console.error("Error fetching bookings:", error);
-    }
-  };
-
-  // Delete a booking
-  const handleDelete = async (bookingId) => {
-    try {
-      const token = getToken();
-      await axios.delete(`http://localhost:8080/auth/booking/delete/${bookingId}`, {
-        headers: {
-          Authorization: `Bearer ${token}`, // Include the JWT token in the header
-        },
-      });
-      fetchBookings(); // Refresh the list after deletion
-    } catch (error) {
-      console.error("Error deleting booking:", error);
+      setError(null);
+    } catch (err) {
+      setError('Failed to fetch bookings. Please try again later.');
+      console.error('Error fetching bookings:', err);
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div className="container mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-4 text-yellow-500">Bookings List</h1>
-      <table className="min-w-full bg-gray-900 border border-yellow-500">
-        <thead>
-          <tr>
-            <th className="py-2 px-4 border-b border-yellow-500 text-yellow-500">Booking ID</th>
-            <th className="py-2 px-4 border-b border-yellow-500 text-yellow-500">Customer ID</th>
-            <th className="py-2 px-4 border-b border-yellow-500 text-yellow-500">Driver ID</th>
-            <th className="py-2 px-4 border-b border-yellow-500 text-yellow-500">Car ID</th>
-            <th className="py-2 px-4 border-b border-yellow-500 text-yellow-500">Pickup Date</th>
-            <th className="py-2 px-4 border-b border-yellow-500 text-yellow-500">Pickup Location</th>
-            <th className="py-2 px-4 border-b border-yellow-500 text-yellow-500">Drop Location</th>
-            <th className="py-2 px-4 border-b border-yellow-500 text-yellow-500">Total Amount</th>
-            <th className="py-2 px-4 border-b border-yellow-500 text-yellow-500">Status</th>
-            <th className="py-2 px-4 border-b border-yellow-500 text-yellow-500">Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {bookings.map((booking) => (
-            <tr key={booking.bookingId} className="hover:bg-gray-800">
-              <td className="py-2 px-4 border-b border-yellow-500 text-white">{booking.bookingId}</td>
-              <td className="py-2 px-4 border-b border-yellow-500 text-white">{booking.customerId}</td>
-              <td className="py-2 px-4 border-b border-yellow-500 text-white">{booking.driverId}</td>
-              <td className="py-2 px-4 border-b border-yellow-500 text-white">{booking.carId}</td>
-              <td className="py-2 px-4 border-b border-yellow-500 text-white">{booking.pickupDate}</td>
-              <td className="py-2 px-4 border-b border-yellow-500 text-white">{booking.pickupLocation}</td>
-              <td className="py-2 px-4 border-b border-yellow-500 text-white">{booking.dropLocation}</td>
-              <td className="py-2 px-4 border-b border-yellow-500 text-white">{booking.totalAmount}</td>
-              <td className="py-2 px-4 border-b border-yellow-500 text-white">
-                {booking.completed ? "Completed" : "Pending"}
-              </td>
-              <td className="py-2 px-4 border-b border-yellow-500">
-                <button
-                  className="bg-red-500 text-white py-1 px-3 rounded hover:bg-red-600 cursor-pointer"
-                  onClick={() => handleDelete(booking.bookingId)}
-                >
-                  Delete
-                </button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+    <div className="p-6 bg-white min-h-screen">
+      <div className="max-w-6xl mx-auto">
+        <header className="flex justify-between items-center mb-8">
+          <h1 className="text-3xl font-bold text-gray-800">Booking Management</h1>
+        </header>
+
+        {error && (
+          <div className="mb-8 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg">
+            {error}
+          </div>
+        )}
+
+        <div className="bg-white rounded-xl shadow-md overflow-hidden border border-gray-200">
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+                    Booking ID
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+                    Customer ID
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+                    Car ID
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+                    Driver ID
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+                    Pickup Location
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+                    Destination
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+                    Booking Date
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+                    Pickup Date
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+                    Pickup Time
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+                    Total Amount
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+                    Status
+                  </th>
+                  {/* Empty th to maintain colSpan="12" */}
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider"></th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-200">
+                {bookings.length > 0 ? (
+                  bookings.map((booking) => (
+                    <tr key={booking.bookingId} className="hover:bg-gray-50">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {booking.bookingId}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {booking.customerId}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {booking.carId}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {booking.driverId}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {booking.pickupLocation}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {booking.destination}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {booking.bookingDate}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {booking.pickupDate}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {booking.pickupTime}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {booking.totalAmount}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span
+                          className={`px-3 py-1 text-xs font-semibold rounded-full ${
+                            booking.status === 'PENDING'
+                              ? "bg-yellow-100 text-yellow-800"
+                              : booking.status === 'CONFIRMED'
+                              ? "bg-green-100 text-green-800"
+                              : "bg-red-100 text-red-800"
+                          }`}
+                        >
+                          {booking.status}
+                        </span>
+                      </td>
+                      {/* Empty td to maintain colSpan="12" */}
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500"></td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan="14" className="px-6 py-4 text-center text-gray-500">
+                      {loading ? "Loading..." : "No bookings available"}
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
     </div>
   );
 };
 
-export default BookingContent;
+export default BookingDashboard;
