@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { useNavigate } from 'react-router-dom'; // For redirecting after logout
+import { useNavigate } from 'react-router-dom';
 
 const API_BASE_URL = 'http://localhost:8080';
 
@@ -24,7 +24,7 @@ const CarDashboard = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [errors, setErrors] = useState({});
-  const navigate = useNavigate(); // Hook for navigation
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetchCars();
@@ -253,33 +253,6 @@ const CarDashboard = () => {
     setErrors({});
   };
 
-  const handleLogout = () => {
-    // Clear the JWT token from local storage
-    localStorage.removeItem('jwtToken');
-    // Reset component state
-    setCars([]);
-    setShowForm(false);
-    setCurrentCar(null);
-    setIsEditing(false);
-    setFormData({
-      brand: '',
-      model: '',
-      licensePlate: '',
-      capacity: 4,
-      baseRate: 0,
-      driverRate: 0,
-      categoryId: '',
-      carImage: null,
-      available: true,
-      assignedDriverId: ''
-    });
-    setLoading(false);
-    setError(null);
-    setErrors({});
-    // Redirect to login page
-    navigate('/login'); // Adjust the route as per your app's routing
-  };
-
   return (
     <div className="p-6 bg-gray-900 text-gray-100 min-h-screen">
       <div className="max-w-6xl mx-auto">
@@ -292,12 +265,6 @@ const CarDashboard = () => {
               disabled={loading}
             >
               Add New Car
-            </button>
-            <button
-              onClick={handleLogout}
-              className="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 shadow-md"
-            >
-              Logout
             </button>
           </div>
         </header>
