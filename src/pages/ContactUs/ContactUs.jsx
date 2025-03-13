@@ -218,7 +218,7 @@ const ContactUs = () => {
 
             {/* Google Maps Embed for Colombo */}
             <div
-              className="h-96 bg-[url('/src/assets/contactUs.webp')] bg-gray-700 rounded-2xl mb-10 border border-gray-600 overflow-hidden"
+              className="h-50 bg-[url('/src/assets/contactUs.webp')] bg-gray-700 rounded-2xl mb-10 border border-gray-600 overflow-hidden"
               style={{ backgroundSize: 'contain', backgroundPosition: 'center', backgroundRepeat: 'no-repeat' }}
             />
 
@@ -232,7 +232,7 @@ const ContactUs = () => {
                     By Public Transport:
                   </h4>
                   <p className="text-gray-400 leading-relaxed text-base">
-                    Begin your journey at Colombo Central Bus Stand or Fort Railway Station, key transportation hubs in the city. From either location, enjoy a brief 5-minute walk to our office at MegaCity Plaza. For added convenience, consider a local tuk-tuk for a swift and seamless ride directly to our entrance.
+                  Start your journey at Colombo Central Bus Stand or Fort Railway Station, then walk to MegaCity Plaza office. Use local tuk-tuk for a quick ride.
                   </p>
                 </div>
                 <div className="group">
@@ -240,7 +240,7 @@ const ContactUs = () => {
                     By Car:
                   </h4>
                   <p className="text-gray-400 leading-relaxed text-base">
-                    Strategically located in central Colombo, our office offers easy access for drivers. Secure parking is available at the Colombo City Center Garage, a mere block away, with competitive hourly rates starting at LKR 100. Additionally, dedicated drop-off zones outside MegaCity Plaza ensure quick and efficient stops.
+                  Our office, conveniently located in central Colombo, provides easy access for drivers, secure parking at the Colombo City Center Garage, and dedicated drop-off zones for efficient stops.
                   </p>
                 </div>
                 <div className="group">
@@ -248,7 +248,7 @@ const ContactUs = () => {
                     From the Airport:
                   </h4>
                   <p className="text-gray-400 leading-relaxed text-base">
-                    Traveling from Bandaranaike International Airport? Reach us in approximately 35 minutes via the Colombo-Katunayake Expressway (E03), with toll fees around LKR 300. Alternatively, the Airport Express shuttle, departing every 30 minutes, connects to Colombo Fort, followed by a short 5-minute walk or cab ride to MegaCity Plaza.
+                  To reach MegaCity Plaza from Bandaranaike International Airport, it takes about 35 minutes via the Colombo-Katunayake Expressway for LKR 300 or by Airport Express shuttle every 30 minutes.
                   </p>
                 </div>
               </div>
