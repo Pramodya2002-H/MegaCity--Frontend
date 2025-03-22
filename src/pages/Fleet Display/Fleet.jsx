@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Header from "../../components/Header";
 import Footer from "../../components/Footer";
+import toast from 'react-hot-toast'; // Assuming react-hot-toast is used for notifications
 
 const Fleet = () => {
   const [cabs, setCabs] = useState([]);
@@ -13,6 +14,8 @@ const Fleet = () => {
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [selectedCabId, setSelectedCabId] = useState(null);
+  const [customer, setCustomer] = useState(null);
+  const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
 
   const navigate = useNavigate();
 
@@ -25,37 +28,108 @@ const Fleet = () => {
     return `Rs ${priceInRs.toLocaleString("en-LK")}`;
   };
 
-  // Fetch data from the backend
+  // Fetch customer profile
+  useEffect(() => {
+    const fetchCustomerProfile = async () => {
+      const customerId = localStorage.getItem('userId'); // Assuming userId is stored in localStorage
+      if (!customerId) {
+        setCustomer(null);
+        return;
+      }
+
+      try {
+        const token = localStorage.getItem('jwtToken');
+        if (!token) {
+          throw new Error("No authentication token found. Please log in again.");
+        }
+
+        const response = await fetch(`http://localhost:8080/auth/customers/getCustomer/${customerId}`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        if (!response.ok) {
+          if (response.status === 401) {
+            throw new Error("Authentication failed. Please log in again.");
+          } else if (response.status === 404) {
+            throw new Error("Customer profile not found.");
+          }
+          throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        setCustomer(data);
+      } catch (error) {
+        console.error("Error fetching customer profile:", error);
+        if (error.message.includes("Authentication failed")) {
+          toast.error(error.message);
+          localStorage.removeItem('jwtToken'); // Clear invalid token
+          navigate('/login', { state: { from: location.pathname } });
+        } else {
+          setCustomer(null); // Clear customer if fetch fails
+        }
+      }
+    };
+
+    fetchCustomerProfile();
+  }, [navigate, location.pathname]);
+
+  // Fetch cabs data from the backend
   useEffect(() => {
     const fetchCabs = async () => {
       setLoading(true);
       try {
-        const response = await fetch("http://localhost:8080/auth/cars/car");
-        const data = await response.json();
+        const token = localStorage.getItem('jwtToken');
+        if (!token) {
+          throw new Error("No authentication token found. Please log in again.");
+        }
 
+        const response = await fetch("http://localhost:8080/auth/cars/car", {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        if (!response.ok) {
+          if (response.status === 401) {
+            throw new Error("Authentication failed. Please log in again.");
+          }
+          throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+
+        const data = await response.json();
         const mappedCabs = data.map((car) => ({
           id: car.carId,
           brand: car.carBrand,
           model: car.carModel,
-          type: car.carType || "Economy",
-          seats: car.capacity,
           available: car.available,
-          image: car.carImgUrl || "https://via.placeholder.com/300x200?text=No+Image",
-          isElectric: car.isElectric || false,
-          pricePerDayUSD: car.pricePerDay || Math.floor(Math.random() * 50) + 50, // Price in USD
+          image: car.carImage || "https://via.placeholder.com/300x200?text=No+Image",
+          ...car, // Spread all other fields from the API response
         }));
 
         setCabs(mappedCabs);
         setFilteredCabs(mappedCabs);
       } catch (error) {
         console.error("Error fetching cabs:", error);
+        if (error.message.includes("Authentication failed")) {
+          toast.error(error.message);
+          localStorage.removeItem('jwtToken'); // Clear invalid token
+          navigate('/login', { state: { from: location.pathname } });
+        } else {
+          toast.error("Unable to load vehicles. Please try again later.");
+        }
       } finally {
         setLoading(false);
       }
     };
 
     fetchCabs();
-  }, []);
+  }, [navigate, location.pathname]);
 
   // Handle filter changes
   const handleFilterChange = (filterType, value) => {
@@ -86,18 +160,26 @@ const Fleet = () => {
     setFilters({ type: "All", availability: "All" });
   };
 
-  // Car types for filter dropdown
-  const carTypes = ["All", "Economy", "Luxury", "Van"];
+  // Car types for filter dropdown (fetched dynamically from cabs if available)
+  const carTypes = ["All", ...(new Set(cabs.map((cab) => cab.type || "Economy")))];
 
   // Handle booking
   const handleBooking = (cabId) => {
-    navigate(`/booking`); // Navigate to the booking page with the cab ID
+    navigate(`/booking`, { state: { selectedCar: cabs.find(cab => cab.id === cabId) } }); // Pass selected car data
   };
 
   // Close modal
   const closeModal = () => {
     setShowModal(false);
     setSelectedCabId(null);
+  };
+
+  // Handle logout
+  const handleLogout = () => {
+    localStorage.removeItem('jwtToken');
+    localStorage.removeItem('userId');
+    toast.success("Logged out successfully!");
+    navigate('/login');
   };
 
   if (loading) {
@@ -111,20 +193,72 @@ const Fleet = () => {
     );
   }
 
+  // Get the first letter of the customer's name
+  const getCustomerInitial = () => {
+    return customer?.firstName?.charAt(0) || 'U'; // 'U' as fallback for unknown user
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-900 to-black text-white">
-      <Header />
-
-      {/* Header Section with Animated Gradient */}
+      {/* Header Section with Animated Gradient and Professional Profile */}
       <div className="relative bg-gradient-to-r from-yellow-500 via-gray-800 to-black text-white py-24 px-6 overflow-hidden">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops)s)] from-yellow-500/20 via-transparent to-transparent animate-pulse"></div>
-        <div className="container mx-auto text-center relative z-10">
-          <h1 className="text-5xl md:text-6xl font-extrabold mb-4 tracking-tight drop-shadow-lg">
-            Discover Our Elite Fleet
-          </h1>
-          <p className="text-xl md:text-2xl max-w-3xl mx-auto opacity-90 text-gray-300 font-light">
-            Experience luxury and reliability with our premium vehicles, tailored for your journey in Colombo City.
-          </p>
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-yellow-500/20 via-transparent to-transparent animate-pulse"></div>
+        <div className="container mx-auto relative z-10">
+          {/* Professional Customer Profile in Upper-Right Corner */}
+          <div className="absolute top-6 right-6 z-20">
+            {customer ? (
+              <div className="relative">
+                <button
+                  onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
+                  className="flex items-center bg-gray-800 hover:bg-gray-700 text-white font-medium py-2 px-4 rounded-md shadow-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-yellow-500"
+                >
+                  <div className="w-8 h-8 bg-gray-600 rounded-full flex items-center justify-center mr-2 text-sm font-bold text-white">
+                    {getCustomerInitial()}
+                  </div>
+                  <span className="hidden md:inline">{customer.firstName} {customer.lastName || ''}</span>
+                </button>
+                {isProfileMenuOpen && (
+                  <div className="absolute right-0 mt-2 w-40 bg-gray-800 rounded-md shadow-lg border border-gray-700 py-1 z-30">
+                    <button
+                      onClick={() => navigate(`/cusProfile/${localStorage.getItem('userId')}`)}
+                      className="w-full text-left px-4 py-2 text-gray-300 hover:bg-gray-700 text-sm"
+                    >
+                      Profile
+                    </button>
+                    <button
+                      onClick={() => navigate('/edit-profile')}
+                      className="w-full text-left px-4 py-2 text-gray-300 hover:bg-gray-700 text-sm"
+                    >
+                      Edit Profile
+                    </button>
+                    <button
+                      onClick={handleLogout}
+                      className="w-full text-left px-4 py-2 text-red-400 hover:bg-gray-700 text-sm"
+                    >
+                      Logout
+                    </button>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <button
+                onClick={() => navigate('/login')}
+                className="bg-yellow-500 hover:bg-yellow-600 text-black font-medium py-2 px-4 rounded-md shadow-sm transition-all duration-200"
+              >
+                Login
+              </button>
+            )}
+          </div>
+
+          {/* Main Header Content */}
+          <div className="text-center">
+            <h1 className="text-5xl md:text-6xl font-extrabold mb-4 tracking-tight drop-shadow-lg">
+              Discover Our Elite Fleet
+            </h1>
+            <p className="text-xl md:text-2xl max-w-3xl mx-auto opacity-90 text-gray-300 font-light">
+              Experience luxury and reliability with our premium vehicles, tailored for your journey in Colombo City.
+            </p>
+          </div>
         </div>
       </div>
 
@@ -182,7 +316,7 @@ const Fleet = () => {
         </div>
       </div>
 
-      {/* Cabs Grid with Creative Card Design */}
+      {/* Cabs Grid with Simplified Card Design */}
       <div className="container mx-auto px-6 py-16 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10">
         {filteredCabs.length > 0 ? (
           filteredCabs.map((cab) => (
@@ -199,6 +333,7 @@ const Fleet = () => {
                   src={cab.image}
                   alt={`${cab.brand} ${cab.model}`}
                   className="w-full h-64 object-cover transition-transform duration-500 group-hover:scale-110"
+                  onError={(e) => { e.target.src = 'https://via.placeholder.com/300x200?text=Image+Error'; }}
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
                 <div className="absolute top-4 right-4">
@@ -219,84 +354,12 @@ const Fleet = () => {
                 )}
               </div>
 
-              {/* Card Content */}
+              {/* Simplified Card Content */}
               <div className="p-6">
                 <div className="flex justify-between items-start mb-5">
                   <h3 className="text-2xl font-bold text-yellow-400 tracking-wide">
                     {cab.brand} {cab.model}
                   </h3>
-                  <div className="text-yellow-400 font-bold text-xl">
-                    {convertToRs(cab.pricePerDayUSD)}
-                    <span className="text-gray-400 text-base font-normal">/day</span>
-                  </div>
-                </div>
-
-                {/* Details Section with Gradient Background */}
-                <div className="bg-gradient-to-r from-gray-700 to-gray-900 p-5 rounded-xl mb-6 border border-yellow-500/20 shadow-inner">
-                  <div className="grid grid-cols-2 gap-y-4 text-base">
-                    <div className="flex items-center">
-                      <span className="text-yellow-400 mr-3">
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          className="h-5 w-5"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M19 14a2 2 0 01-2 2H7a2 2 0 01-2-2V7a2 2 0 012-2h10a2 2 0 012 2v7z"
-                          />
-                        </svg>
-                      </span>
-                      <span className="font-medium text-gray-200">Type:</span>
-                    </div>
-                    <span className="text-gray-300">{cab.type}</span>
-
-                    <div className="flex items-center">
-                      <span className="text-yellow-400 mr-3">
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          className="h-5 w-5"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M5 3l1.293-1.293a1 1 0 011.414 0l5.793 5.793a1 1 0 010 1.414L7.707 12.707A1 1 0 016 12V5a1 1 0 011-1z"
-                          />
-                        </svg>
-                      </span>
-                      <span className="font-medium text-gray-200">Seats:</span>
-                    </div>
-                    <span className="text-gray-300">{cab.seats}</span>
-
-                    <div className="flex items-center">
-                      <span className="text-yellow-400 mr-3">
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          className="h-5 w-5"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M12 14l9-5-9-5-9 5 9 5z"
-                          />
-                        </svg>
-                      </span>
-                      <span className="font-medium text-gray-200">Price:</span>
-                    </div>
-                    <span className="text-gray-300">{convertToRs(cab.pricePerDayUSD)}/day</span>
-                  </div>
                 </div>
 
                 {/* Book Now Button with Hover Effect */}
