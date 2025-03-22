@@ -88,10 +88,26 @@ const Booking = () => {
   useEffect(() => {
     const fetchAvailableCars = async () => {
       try {
-        const response = await fetch('http://localhost:8080/auth/cars/car');
+        const token = localStorage.getItem('jwtToken');
+        if (!token) {
+          throw new Error("No authentication token found. Please log in again.");
+        }
+
+        const response = await fetch('http://localhost:8080/auth/cars/car', {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
         if (!response.ok) {
+          if (response.status === 401) {
+            throw new Error("Authentication failed. Please log in again.");
+          }
           throw new Error(`HTTP error! Status: ${response.status}`);
         }
+
         const data = await response.json();
         const availableCars = data
           .filter((car) => car.available === true)
@@ -101,19 +117,26 @@ const Booking = () => {
             model: car.carModel,
             type: car.carType || 'Economy',
             seats: car.capacity,
-            image: car.carImgUrl || 'https://images.unsplash.com/photo-1605559424843-9e4c228bf1c2?q=80&w=2128&auto=format&fit=crop',
+            image: car.carImage || '', 
             hourlyRate: (car.type === 'Luxury' ? 25 : car.type === 'Van' ? 20 : 15) * EXCHANGE_RATE, // Convert hourly rate to Rs
           }));
         setAvailableCars(availableCars);
       } catch (error) {
         console.error('Error fetching cars:', error);
-        setError('Unable to load available vehicles. Please try again later.');
+        if (error.message.includes("Authentication failed")) {
+          toast.error(error.message);
+          localStorage.removeItem('jwtToken'); // Clear invalid token
+          navigate('/login', { state: { from: location.pathname } });
+        } else {
+          setError('Unable to load available vehicles. Please try again later.');
+        }
       }
     };
+
     if (!preselectedCar) {
       fetchAvailableCars();
     }
-  }, [preselectedCar]);
+  }, [preselectedCar, navigate, location.pathname]);
 
   useEffect(() => {
     if (bookingData.pickupCoords && bookingData.dropCoords && window.google?.maps) {
@@ -122,7 +145,7 @@ const Booking = () => {
         ...prev,
         distance,
         distanceFare: distance * 1.5 * EXCHANGE_RATE, // Convert distance fare to Rs
-        total: prev.baseFare + distance * 1.5 * EXCHANGE_RATE + prev.tax + (bookingData.driverRequired ? 30 * EXCHANGE_RATE : 0), // Convert total to Rs
+        total: prev.baseFare + (distance * 1.5 * EXCHANGE_RATE) + prev.tax + (bookingData.driverRequired ? 30 * EXCHANGE_RATE : 0), // Convert total to Rs
       }));
 
       if (window.google.maps.DirectionsService) {
@@ -146,7 +169,7 @@ const Booking = () => {
         console.error("Google Maps DirectionsService is not available.");
       }
     }
-  }, [bookingData.pickupCoords, bookingData.dropCoords, bookingData.driverRequired]);
+  }, [bookingData.pickupCoords, bookingData.dropCoords, bookingData.driverRequired, EXCHANGE_RATE]);
 
   const onPlaceChanged = (type) => {
     const autocomplete = type === "pickup" ? pickupAutocomplete : dropoffAutocomplete;
@@ -235,8 +258,14 @@ const Booking = () => {
       setStep(3);
       toast.success("Booking Successful! Your ride has been confirmed.");
     } catch (error) {
-      setError(`Booking failed: ${error.message}`);
-      console.error("Booking error:", error);
+      if (error.message.includes("Authentication failed")) {
+        toast.error(error.message);
+        localStorage.removeItem('jwtToken'); // Clear invalid token
+        navigate('/login', { state: { from: location.pathname } });
+      } else {
+        setError(`Booking failed: ${error.message}`);
+        console.error("Booking error:", error);
+      }
     } finally {
       setLoading(false);
     }
@@ -268,9 +297,10 @@ const Booking = () => {
             >
               <div className="relative">
                 <img
-                  src={car.image}
+                  src={car.image || 'https://via.placeholder.com/300x200?text=No+Image'}
                   alt={`${car.brand} ${car.model}`}
                   className="w-full h-48 object-cover"
+                  onError={(e) => { e.target.src = 'https://via.placeholder.com/300x200?text=Image+Error'; }}
                 />
                 <div className="absolute top-4 right-4">
                   <span className="px-4 py-1 rounded-full text-sm font-medium bg-yellow-500 text-gray-900">
@@ -305,7 +335,7 @@ const Booking = () => {
             </div>
           ))
         ) : (
-          <div className="col-span-3 text-center py-12">
+          <div className="col-span-3 text-center py-8">
             <CarIcon className="h-12 w-12 mx-auto text-yellow-400 mb-4" />
             <p className="text-gray-500">Loading available vehicles...</p>
           </div>
@@ -424,7 +454,7 @@ const Booking = () => {
                   className="h-5 w-5 text-yellow-500 focus:ring-yellow-500 border-gray-500 rounded"
                 />
                 <label htmlFor="driverRequired" className="ml-2 text-sm text-gray-300">
-                  I need a driver (additional Rs 500 fee)
+                  I need a driver (additional Rs {30 * EXCHANGE_RATE} fee)
                 </label>
               </div>
             </div>
@@ -508,7 +538,7 @@ const Booking = () => {
                 {bookingData.driverRequired && (
                   <div className="flex justify-between">
                     <span>Driver Fee</span>
-                    <span>Rs 30.00</span>
+                    <span>Rs {(30 * EXCHANGE_RATE).toFixed(2)}</span>
                   </div>
                 )}
                 <div className="flex justify-between font-bold text-lg pt-2 border-t border-gray-700">
@@ -584,7 +614,7 @@ const Booking = () => {
       <div className="flex flex-wrap justify-center gap-4">
         <button
           className="px-6 py-3 bg-gray-800 text-yellow-400 font-medium rounded-lg hover:bg-gray-700 transition shadow-lg border border-yellow-500/30"
-          onClick={() => navigate('/bookings')}
+          onClick={() => navigate('/cusProfile')}
         >
           View My Bookings
         </button>
