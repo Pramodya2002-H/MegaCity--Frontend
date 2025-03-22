@@ -30,7 +30,14 @@ const CarDashboard = () => {
     fetchCars();
   }, []);
 
-  const getToken = () => localStorage.getItem('jwtToken');
+  const getToken = () => {
+    const token = localStorage.getItem('jwtToken');
+    if (!token) {
+      console.error('No JWT token found in localStorage');
+      setError('Authentication token not found. Please log in.');
+    }
+    return token;
+  };
 
   const fetchCars = async () => {
     setLoading(true);
@@ -58,6 +65,50 @@ const CarDashboard = () => {
     } catch (err) {
       setError('Failed to fetch cars. Please try again later.');
       console.error('Error fetching cars:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Updated function to create a car programmatically like in Postman
+  const createCarProgrammatically = async () => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      const token = getToken();
+      if (!token) throw new Error('No token found');
+
+      const carData = new FormData();
+      carData.append('brand', 'TOYOTA');
+      carData.append('model', 'Axio');
+      carData.append('licensePlate', 'CAL7978');
+      carData.append('capacity', '4');
+      carData.append('available', 'true'); // Changed to 'available' as boolean, adjust based on backend
+
+      // Adding a placeholder image (replace with actual file path or fetch logic)
+      // For now, using a static image from a public folder (adjust path as needed)
+      const imageResponse = await fetch('/path/to/image.jpg'); // Replace with your image path
+      const imageBlob = await imageResponse.blob();
+      carData.append('carImage', imageBlob, 'image.jpg');
+
+      const response = await axios.post(
+        `${API_BASE_URL}/auth/cars/createCar`,
+        carData,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'multipart/form-data'
+          }
+        }
+      );
+
+      setCars([...cars, response.data]);
+      alert('Car created programmatically successfully!');
+    } catch (err) {
+      setError('Failed to create car programmatically.');
+      console.error('Error creating car programmatically:', err.response?.data || err.message);
+      alert(`Failed to create car programmatically. Error: ${err.response?.data?.message || err.message}`);
     } finally {
       setLoading(false);
     }
@@ -265,6 +316,13 @@ const CarDashboard = () => {
               disabled={loading}
             >
               Add New Car
+            </button>
+            <button
+              onClick={createCarProgrammatically}
+              className="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 disabled:bg-green-400 shadow-md"
+              disabled={loading}
+            >
+              Create Car (Postman Style)
             </button>
           </div>
         </header>
