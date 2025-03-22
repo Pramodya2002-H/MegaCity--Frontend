@@ -16,6 +16,7 @@ import UpdateDriverProfile from "./pages/DriverDashboard/UpdateDriverProfile.jsx
 
 import AdminRoutes from "./Admin Panel/AdminRoutes.jsx";
 import AdminSidebar from "./Admin Panel/AdminSidebar.jsx";
+import CusProfile from "./pages/CustomerProfile/CusProfile.jsx";
 
 function App() {
   const [count, setCount] = useState(0)
@@ -39,6 +40,7 @@ function App() {
             <Route path="/contactUs" element={<ContactUs/>}/>
             <Route path="/aboutUs" element={<AboutUs/>}/>
             <Route path="/edit-driver-profile" element={<UpdateDriverProfile/>}/>
+            <Route path="/cusProfile" element={<CusProfile/>}/>
           </Routes>
           
          
